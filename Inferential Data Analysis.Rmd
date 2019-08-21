@@ -1,0 +1,125 @@
+---
+title: "Tooth Growth dataset"
+author: "Kobra"
+date: "15/08/2019"
+output: pdf_document
+---
+
+## Tooth growth data analysis
+
+# Synopsis
+We are going to analyze the tooth growth data and investigate whether different doses of vitamin C have effect on the tooth growth. In this dataset, the response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+
+# 1. Basic exploratory data analysis
+
+Loading required packages if necessary:
+
+```{r}
+library (dplyr)
+library (ggplot2)
+
+```
+
+Loading ToothGrowth data sets:
+```{r}
+mydata <- ToothGrowth
+```
+
+
+```{r}
+str (mydata)
+head (mydata)
+```
+
+Converting dose levels to fctor variable:
+```{r}
+mydata$dose <- as.factor (mydata$dose)
+```
+
+Providing a summary of data file:
+```{r}
+summary (mydata)
+```
+
+Comparing the two methods of delivery:
+
+```{r}
+g1 <- ggplot (data= mydata, aes (x=supp, y= len))
+g1 <- g1 + geom_boxplot()
+g1 <- g1 + labs (x= "Delivery method of vitamin C", y= "Length of Odontoblasts", title = "Comparing the two delivery methods of vitamin C on tooth growth", caption = "The effect of delivery of vitamin C via orange juice (OJ) versus ascorbic acid (VC) on the length of odontoblasts.\n The results show no significant difference between the two groups.(p = 0.06)")+ theme(plot.caption = element_text(lineheight = 1.2, hjust= 0))
+g1
+```
+
+Hypothesis testing:
+Is there any significant differece between the two method of delivery?
+
+```{r}
+t.test(len ~ supp, data = mydata)$p.value
+```
+
+
+Comparing the three different doses of vitamin C:
+
+```{r}
+g2 <- ggplot (data= mydata, aes (x=dose, y= len))
+g2 <- g2 + geom_boxplot()
+g2 <- g2 + labs (x= "Dosage of vitamin C (mg/day)", y= "Length of Odontoblasts", title = "Comparing different levels of vitamin C on tooth growth", caption = "The effect of three different dosage of vitamin C (0.5, 1 and 2 mg/day) on the length of odontoblasts.\n The results suggests the all three groups are significantly different from each other. (pvlaue <0.05).")+ theme(plot.caption = element_text(lineheight = 1.2, hjust= 0))
+g2
+```
+
+Hypothesis testing:
+
+Is there any significant differece between the dose groups?
+
+```{r}
+with (mydata, t.test (len [dose == 0.5], len [dose == 1]))$p.value
+```
+
+```{r}
+with (mydata, t.test (len [dose == 0.5], len [dose == 2]))$p.value
+```
+
+```{r}
+with (mydata, t.test (len [dose == 1], len [dose == 2]))$p.value
+```
+
+#Comparing the mean of lenghts for different doses via each method of delivery:
+
+```{r}
+grouped_data <- mydata %>% group_by(supp, dose)
+averages <- grouped_data %>% summarise(mean = mean (len))
+averages
+```
+
+Graphing lenghts based on dose and delivery method::
+
+```{r}
+g3 <- ggplot (data= mydata, aes (x=dose, y= len))
+g3 <- g3 + geom_boxplot()+ facet_grid(.~ supp)
+g3 <- g3 + labs (x= "Vitamin C dosage (mg/day)", y= "Length of Odontoblasts", title = "Effect of vitamin C on tooth growth", caption = "The effect of three dose levels of vitamin C (0.5, 1, and 2 mg/day) on the length of odontoblasts \n by one of two delivery methods, orange juice (OJ) or ascorbic acid (VC). \n The results indicate significantly higher odontoblasts lenght for OJ group at lower dosage (0.5 and 1 mg/day) \n (pvalue < 0.05) while there was no significant difference between the two groups at 2 mg/day (p= 0.96). ")+ theme(plot.caption = element_text(lineheight = 1.2, hjust= 0))
+g3
+```
+
+Hypothesis testing:
+
+Is there any significant differnce between the two methos at each level of vitamin C dosage?
+
+```{r}
+mydata_0.5 <- subset(mydata, mydata$dose==.5)
+mydata_1 <- subset(mydata, mydata$dose==1)
+mydata_2 <- subset(mydata, mydata$dose==2)
+
+t_0.5 <- t.test(len~supp, data=mydata_0.5)$p.value
+t_1 <- t.test(len~supp, data=mydata_1)$p.value
+t_2 <- t.test(len~supp, data=mydata_2)$p.value
+
+t_summary <- c ("dose= 0.5"= t_0.5, "dose= 1"= t_1, "dose= 2"= t_2)
+t_summary
+```
+
+## Conclusion
+
+The results suggest that the deliery method itself will not make any significant differnce on the tooth growth. However, higher dose levels, depsite the different delivery method, will significantly increase the tooth growth.
+By comparing the lenghts at each dose level, we observed that the lenghts are significantly higher at 0.5 and 1 mg/day for orange juice groupe while no sognificant difference was observed at the dose of 2 mg/day between orange juice and ascorbic acid groups. 
+
+Since we were implenting three t tests for each hypothesis testing, we would need to correct the family wise error uremain vaild.
