@@ -1,2 +1,2 @@
 # Tooth-growth-data
-Tooth growth data analysis
+Investigating the effect of vitamin C on tooth growth.
